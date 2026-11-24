@@ -1,0 +1,24 @@
+- hosts: ohserver
+  vars_files: 
+    - /mnt/c/Users/{{ lookup('env','USER' )}}/apikeys/mqvariables.enc
+  vars:
+    srcdir: "/mnt/c/Users/{{ lookup('env','USER' )}}/OneDrive/dev/tackley/energy/solar_forecast"
+    destdir: ~/src/solar
+    datadir: ~/data/energy
+  tasks:
+  - name: Copy files
+    copy: src={{ item.src }} dest={{ item.dest }} mode={{ item.mode }}
+    with_items:
+    - {src: '{{srcdir}}/getSolardata.py', dest: '{{destdir}}/', mode: '644', backup: yes }
+    - {src: '{{srcdir}}/getSolarData.sh', dest: '{{destdir}}/', mode: '754', backup: yes }
+    - {src: '{{srcdir}}/solarConfig.py', dest: '{{destdir}}/', mode: '644', backup: yes }
+  - name: update forecast.solar API key
+    ansible.builtin.replace:
+      path: '{{destdir}}/solarConfig.py'
+      regexp: 'CHANGEME'
+      replace: '{{ fcsolarapikey }}'
+  - name: set datadir
+    ansible.builtin.replace:
+      path: '{{destdir}}/solarConfig.py'
+      regexp: 'DATADIRSUBST'
+      replace: '{{ datadir }}'
